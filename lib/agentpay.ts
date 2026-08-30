@@ -5,6 +5,7 @@ import {
   type MerchantProduct,
 } from "@agentpay/merchant-sdk";
 import { productById, products } from "./products";
+import { quoteFulfillment, SHIPS_TO } from "./shipping";
 import { supplierById } from "./suppliers";
 import type { Product } from "./types";
 
@@ -88,7 +89,27 @@ export const checkout = createAgentPayCheckoutHandler({
     if (!product || product.stock < 1) return null;
     return agentPayProduct(product);
   },
+  /**
+   * Delivery is quoted per order, from the supplier that stocks the part to the
+   * address on the request. It is priced before the policy runs because the
+   * mandate limit has to cover what the buyer is actually charged, and returning
+   * `null` for an address the network does not serve refuses the order without
+   * consuming one of the buyer's approved uses.
+   */
+  resolveFulfillment: ({ product: quoted, address, address_source, now }) => {
+    const product = productById[quoted.id];
+    if (!product) return null;
+    return quoteFulfillment({
+      product,
+      address,
+      addressSource: address_source,
+      subtotalCents: quoted.price_cents,
+      now,
+    });
+  },
 });
+
+export { SHIPS_TO };
 
 /**
  * The origin AgentPay and agents will call back on. `request.url` is not it:
