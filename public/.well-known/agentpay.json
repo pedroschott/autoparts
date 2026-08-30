@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "merchant": {
+    "id": "partsroute-demo",
+    "name": "PartsRoute",
+    "description": "Aftermarket and OE auto parts marketplace.",
+    "currency": "USD",
+    "categories": ["auto-parts", "automotive-accessories"]
+  },
+  "endpoints": {
+    "checkout": "/api/agentpay/checkout",
+    "catalog": "/api/products"
+  }
+}
