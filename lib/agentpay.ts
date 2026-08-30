@@ -1,10 +1,18 @@
-import { createAgentPayCheckoutHandler, type MerchantProduct } from "@agentpay/merchant-sdk";
-import { productById } from "./products";
+import {
+  createAgentPayCatalogHandler,
+  createAgentPayCheckoutHandler,
+  type AgentPayCatalogProduct,
+  type MerchantProduct,
+} from "@agentpay/merchant-sdk";
+import { productById, products } from "./products";
+import { supplierById } from "./suppliers";
 import type { Product } from "./types";
 
 export const MERCHANT_ID = process.env.AGENTPAY_MERCHANT_ID ?? "mrc_835dda9e14b9709870f2";
 export const MERCHANT_NAME = "PartsRoute";
 export const CHECKOUT_PATH = "/api/agentpay/checkout";
+export const CATALOG_PATH = "/api/agentpay/catalog";
+export const PRODUCT_URL_TEMPLATE = "/product/{id}";
 export const REGISTRY_URL =
   process.env.AGENTPAY_REGISTRY_URL ?? "https://agentpay-yuno.vercel.app";
 
@@ -93,3 +101,65 @@ export const checkout = createAgentPayCheckoutHandler({
     return agentPayProduct(product);
   },
 });
+
+/**
+ * The origin AgentPay and agents will call back on. `request.url` is not it:
+ * behind a tunnel or a load balancer Next sees the internal host, so the
+ * manifest would advertise `localhost:3000` and every purchase would fail at
+ * connect time with nothing in this store's logs to show for it. The forwarded
+ * host is what the agent actually resolved, and AGENTPAY_PUBLIC_ORIGIN overrides
+ * both for deployments that terminate TLS somewhere that rewrites neither.
+ */
+export function publicOrigin(request: Request) {
+  const override = process.env.AGENTPAY_PUBLIC_ORIGIN;
+  if (override) return new URL(override).origin;
+
+  const headers = request.headers;
+  const host = headers.get("x-forwarded-host") ?? headers.get("host");
+  if (!host) return new URL(request.url).origin;
+
+  const proto =
+    headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
+    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
+  return `${proto}://${host}`;
+}
+
+export function productPath(product: Pick<Product, "id">) {
+  return `/product/${product.id}`;
+}
+
+/**
+ * The catalog entry an agent sees through `find_products`. It is derived from
+ * the same functions as the checkout quote, so the price and category the agent
+ * sizes a mandate from are the integer and slug the policy engine will check.
+ */
+export function agentPayCatalogProduct(product: Product, origin: string): AgentPayCatalogProduct {
+  return {
+    product_id: product.id,
+    name: `${product.brand} ${product.name}`,
+    description: `${product.description} Part number ${product.partNumber}. ${product.subCategory}${product.position ? `, ${product.position}` : ""}. Supplier: ${supplierById[product.supplierId].name}.`,
+    category: agentPayCategory(product),
+    price_cents: agentPayPriceCents(product),
+    currency: CURRENCY,
+    sku: product.partNumber,
+    brand: product.brand,
+    availability: product.stock > 0 ? "in_stock" : "out_of_stock",
+    url: `${origin}${productPath(product)}`,
+  };
+}
+
+/**
+ * The catalog route advertised as `catalog_endpoint`. Built per request so the
+ * product URLs carry the public origin the agent actually resolved.
+ */
+export function catalog(request: Request) {
+  const origin = publicOrigin(request);
+  return createAgentPayCatalogHandler({
+    merchantId: MERCHANT_ID,
+    merchantName: MERCHANT_NAME,
+    currency: CURRENCY,
+    categories: AGENTPAY_CATEGORIES,
+    products: () => products.map((product) => agentPayCatalogProduct(product, origin)),
+    maxAgeSeconds: 300,
+  })(request);
+}
