@@ -15,6 +15,7 @@ import {
   MERCHANT_ID,
 } from "@/lib/agentpay";
 import { productById } from "@/lib/products";
+import { quoteFulfillment, serviceLevelFor } from "@/lib/shipping";
 
 /**
  * The regression net from the AgentPay merchant docs, pinned to this store's
@@ -97,6 +98,51 @@ function handlerFor(current: RegistryMandate, product: TestProduct = PRODUCT) {
     now: () => NOW,
     resolveProduct: async (id) => (id === product.id ? (product as MerchantProduct) : null),
   });
+}
+
+// Brooklyn: inside the same-day courier radius. Queens ZIPs behave the same.
+const LOCAL_ADDRESS = {
+  recipient: "Dana Ruiz",
+  line1: "88 Wythe Ave",
+  city: "Brooklyn",
+  region: "NY",
+  postal_code: "11249",
+  country_code: "US",
+};
+// Denver: a US address the network serves on ground, not by courier.
+const REMOTE_ADDRESS = { ...LOCAL_ADDRESS, city: "Denver", region: "CO", postal_code: "80202" };
+
+/** The production handler, which quotes delivery before it evaluates the policy. */
+function shippingHandlerFor(current: RegistryMandate, product: TestProduct = PRODUCT) {
+  return createAgentPayCheckoutHandler({
+    merchantId: MERCHANT_ID,
+    registryUrl: "https://agentpay.example",
+    fetcher: stubRegistry(current),
+    now: () => NOW,
+    resolveProduct: async (id) => (id === product.id ? (product as MerchantProduct) : null),
+    resolveFulfillment: ({ product: quoted, address, address_source, now }) => {
+      const row = productById[quoted.id];
+      if (!row) return null;
+      return quoteFulfillment({
+        product: row,
+        address,
+        addressSource: address_source,
+        subtotalCents: quoted.price_cents,
+        now,
+      });
+    },
+  });
+}
+
+function shippingBody(address: Record<string, unknown> | null, extra: Record<string, unknown> = {}) {
+  return {
+    mandate_id: artifact.mandate_id,
+    merchant_id: MERCHANT_ID,
+    product_id: PRODUCT.id,
+    ...(address ? { shipping_address: address } : {}),
+    purchase_reason: "The delivery van's front rotors are scored and it runs tomorrow.",
+    ...extra,
+  };
 }
 
 function signedRequest(nonce: string, body?: Record<string, unknown>) {
@@ -242,6 +288,90 @@ describe("agentpay checkout", () => {
     const withCore = productById["bp-020"];
     expect(withCore.core).toBeGreaterThan(0);
     expect(agentPayPriceCents(withCore)).toBe(Math.round((withCore.price + (withCore.core ?? 0)) * 100));
+  });
+
+  it("quotes same-day courier to a local address and charges the part plus delivery", async () => {
+    const response = await shippingHandlerFor(mandate())(
+      signedRequest("nonce-ship-local", shippingBody(LOCAL_ADDRESS))
+    );
+    const body = await response.json();
+    expect(body.decision).toBe("approved");
+    expect(body.fulfillment.method).toBe("Same-day courier");
+    expect(body.fulfillment.ships_to.postal_code).toBe("11249");
+    expect(body.fulfillment.address_source).toBe("registered");
+    expect(body.fulfillment.ship_from).toContain("Midtown Auto Supply");
+    // The amount the mandate is evaluated against is the total, not the sticker.
+    expect(body.charge.subtotal_cents).toBe(PRODUCT.price_cents);
+    expect(body.charge.total_cents).toBe(PRODUCT.price_cents + body.charge.shipping_cents);
+    expect(body.charge.shipping_cents).toBeGreaterThan(0);
+  });
+
+  it("falls back to ground for a US address outside the courier radius", async () => {
+    const response = await shippingHandlerFor(mandate())(
+      signedRequest("nonce-ship-remote", shippingBody(REMOTE_ADDRESS, { shipping_address_source: "custom" }))
+    );
+    const body = await response.json();
+    expect(body.decision).toBe("approved");
+    expect(body.fulfillment.method).toBe("Ground");
+    expect(body.fulfillment.address_source).toBe("custom");
+    expect(body.fulfillment.notes).toContain(
+      "Delivering to a one-off address for this order, not the address on the account."
+    );
+    // Two to five business days from a Sunday lands on a weekday, never a weekend.
+    expect(new Date(body.fulfillment.estimated_delivery.earliest).getUTCDay()).not.toBe(0);
+    expect(new Date(body.fulfillment.estimated_delivery.latest).getUTCDay()).not.toBe(6);
+  });
+
+  it("refuses an address the supplier network does not serve, before spending a use", async () => {
+    const response = await shippingHandlerFor(mandate())(
+      signedRequest("nonce-ship-abroad", shippingBody({ ...LOCAL_ADDRESS, country_code: "BR", postal_code: "01310" }))
+    );
+    const body = await response.json();
+    expect(body.decision).toBe("refused");
+    expect(body.reason_code).toBe("SHIPPING_ADDRESS_UNSUPPORTED");
+    expect(body.checks.policy).toBe(false);
+  });
+
+  it("refuses a checkout with no address at all rather than guessing one", async () => {
+    const response = await shippingHandlerFor(mandate())(signedRequest("nonce-ship-none", shippingBody(null)));
+    await expect(response.json()).resolves.toMatchObject({
+      decision: "refused",
+      reason_code: "SHIPPING_ADDRESS_UNSUPPORTED",
+    });
+  });
+
+  it("routes fleet-sized parts as freight even inside the courier radius", async () => {
+    // The catalog puts a Civic tire and a box-truck tire in one category, so the
+    // size on the row decides. A 19.5 in disc wheel and a 7-leaf spring do not
+    // go out on the same courier run as a set of brake pads.
+    expect(serviceLevelFor(productById["wt-151"], LOCAL_ADDRESS)).toBe("freight");
+    expect(serviceLevelFor(productById["su-140"], LOCAL_ADDRESS)).toBe("freight");
+    expect(serviceLevelFor(productById["wt-011"], LOCAL_ADDRESS)).toBe("courier");
+    expect(serviceLevelFor(productById["bp-001"], LOCAL_ADDRESS)).toBe("courier");
+
+    const quote = quoteFulfillment({
+      product: productById["wt-151"],
+      address: LOCAL_ADDRESS,
+      addressSource: "registered",
+      subtotalCents: 42_900,
+      now: NOW,
+    });
+    expect(quote?.method).toBe("Freight, curbside delivery");
+    // Freight is never free on the $150 ground threshold.
+    expect(quote?.shipping_cents).toBeGreaterThan(0);
+    expect(quote?.notes).toContain("Curbside only. Someone must be present to receive the pallet.");
+  });
+
+  it("escalates when delivery is what pushes the order over the per-purchase limit", async () => {
+    // The part alone fits the $2,000 limit; the courier fee is what breaks it.
+    const justUnder = { ...PRODUCT, price_cents: 199_500 };
+    const response = await shippingHandlerFor(mandate(), justUnder)(
+      signedRequest("nonce-ship-escalate", shippingBody(LOCAL_ADDRESS))
+    );
+    const body = await response.json();
+    expect(body.charge.total_cents).toBeGreaterThan(200_000);
+    expect(body.decision).toBe("escalated");
+    expect(body.reason_code).toBe("AMOUNT_EXCEEDS_LIMIT");
   });
 
   it("rejects a stale timestamp", async () => {
