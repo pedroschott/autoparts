@@ -27,14 +27,39 @@ npm run build    # production build
 
 ## Data
 
-The catalog is hardcoded in `lib/products.ts` (55 parts across 12 systems, all
-prices in USD) and `lib/suppliers.ts` (8 suppliers, 8 vehicles). Every product
+The catalog is hardcoded in `lib/products.ts` (161 parts across 12 systems, all
+prices in USD) and `lib/suppliers.ts` (8 suppliers, 14 vehicles). Every product
 row carries its brand, part number, price, list price, core charge, stock,
 warranty, specs and vehicle fitment, so swapping in a real database later means
 replacing those two modules and nothing else.
 
 Part artwork lives in `public/parts/*.svg` — one illustration per part type,
 referenced by the `image` slug on each product.
+
+### The fleet
+
+Eight of the vehicles are retail. The other six are a commercial fleet, and they
+carry a `unit` and a `role` on top of the usual year/make/model — the labels a
+dispatcher uses when a truck is off the road. Each one is stocked with the parts
+its failure mode actually needs:
+
+| Unit | Vehicle | Role | Failure it is stocked for |
+| --- | --- | --- | --- |
+| VAN-17 | 2021 Ford Transit 250 | Last-mile delivery | Tire blowout |
+| VAN-22 | 2020 Mercedes-Benz Sprinter 2500 | Delivery | Alternator failure |
+| TRUCK-08 | 2022 Ford F-150 XL Fleet | Field service | Bent wheel after accident |
+| TRUCK-12 | 2021 Chevrolet Silverado 2500HD | Maintenance crew | Brake failure |
+| BOX-03 | 2019 Ford E-450 box truck | Distribution | Battery / cooling failure |
+| BOX-07 | 2020 Isuzu NPR | Urban freight | Tire / brake incident |
+
+Fleet rows sit in their own block at the end of `lib/products.ts`, and the id
+band names the unit each was stocked for: `x00` VAN-17, `x10` VAN-22, `x20`
+TRUCK-08, `x30` TRUCK-12, `x40` BOX-03, `x50` BOX-07. Fitment is deliberately
+narrow — a 235/65R16C van tire and a 19.5 in medium-duty tire share a category
+and nothing else — so selecting a unit in the vehicle picker shows only what
+will bolt on. They are ordinary catalog rows in every other respect: they use
+the same twelve mandate categories, so no existing mandate is invalidated by
+their arrival.
 
 ## AgentPay
 
@@ -86,6 +111,12 @@ registry and a fixed clock drive approved, escalated and every refusal path with
 no network and no buyer. It exists to catch the two mistakes that silently
 disable AgentPay — a body parser that breaks signatures, and a refactor that
 charges before reading the decision.
+
+`tests/catalog-data.test.ts` covers the hand-written table itself: unique ids and
+part numbers, a real supplier, artwork file and vehicle behind every row, a price
+below list, and a storefront category that maps to an advertised mandate slug
+rather than falling through to `parts`. It also holds each fleet unit to enough
+depth to demo on, including parts for its own failure mode.
 
 The 10-second smoke test, which must return 401:
 

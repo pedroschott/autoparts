@@ -86,8 +86,13 @@ export function ProductDetail({
             {fits.map((v) => (
               <li
                 key={v.id}
-                className="rounded-full border border-ink-300 bg-ink-100/60 px-3 py-1 text-[13px]"
+                className="flex items-center gap-2 rounded-full border border-ink-300 bg-ink-100/60 px-3 py-1 text-[13px]"
               >
+                {v.unit && (
+                  <span className="rounded bg-ink-300/60 px-1.5 text-[10px] font-bold tracking-wide text-ink-700">
+                    {v.unit}
+                  </span>
+                )}
                 {v.year} {v.make} {v.model} · {v.engine}
               </li>
             ))}

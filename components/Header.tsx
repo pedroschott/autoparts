@@ -5,7 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { useVehicle } from "@/lib/vehicle";
-import { vehicleFull, vehicleLabel, vehicles } from "@/lib/suppliers";
+import { fleetVehicles, retailVehicles, vehicleFull, vehicleLabel } from "@/lib/suppliers";
+import type { Vehicle } from "@/lib/types";
 import { Car, Cart, Chevron, Logo, Menu, Search } from "./icons";
 
 const NAV = [
@@ -28,6 +29,33 @@ function VehiclePicker() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  const row = (v: Vehicle) => (
+    <li key={v.id}>
+      <button
+        onClick={() => {
+          setVehicleId(v.id);
+          setOpen(false);
+        }}
+        className={`block w-full px-3.5 py-2.5 text-left text-sm transition hover:bg-ink-100 ${
+          v.id === vehicle.id ? "bg-brand-100 font-semibold" : ""
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          {v.unit && (
+            <span className="shrink-0 rounded bg-ink-300/50 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-ink-700">
+              {v.unit}
+            </span>
+          )}
+          <span className="truncate">{vehicleLabel(v)}</span>
+        </span>
+        <span className="mt-0.5 block truncate text-xs text-ink-500">
+          {v.trim} · {v.engine}
+          {v.role ? ` · ${v.role}` : ""}
+        </span>
+      </button>
+    </li>
+  );
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -36,6 +64,7 @@ function VehiclePicker() {
       >
         <Car className="h-6 w-6 shrink-0 text-ink-700" />
         <span className="min-w-0 flex-1 truncate text-[15px] font-medium">
+          {vehicle.unit && <span className="text-ink-500">{vehicle.unit} · </span>}
           {vehicleLabel(vehicle)}
         </span>
         <Chevron className={`h-4 w-4 shrink-0 text-ink-500 transition ${open ? "rotate-180" : ""}`} />
@@ -43,28 +72,15 @@ function VehiclePicker() {
 
       {open && (
         <div className="absolute right-0 z-40 mt-1.5 w-[320px] overflow-hidden rounded-lg border border-ink-300 bg-white shadow-xl">
-          <p className="border-b border-ink-100 px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
-            Select a vehicle
-          </p>
           <ul className="max-h-[340px] overflow-y-auto thin-scroll">
-            {vehicles.map((v) => (
-              <li key={v.id}>
-                <button
-                  onClick={() => {
-                    setVehicleId(v.id);
-                    setOpen(false);
-                  }}
-                  className={`block w-full px-3.5 py-2.5 text-left text-sm transition hover:bg-ink-100 ${
-                    v.id === vehicle.id ? "bg-brand-100 font-semibold" : ""
-                  }`}
-                >
-                  <span className="block">{vehicleLabel(v)}</span>
-                  <span className="block text-xs text-ink-500">
-                    {v.trim} · {v.engine}
-                  </span>
-                </button>
-              </li>
-            ))}
+            <li className="border-b border-ink-100 px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
+              Select a vehicle
+            </li>
+            {retailVehicles.map(row)}
+            <li className="border-y border-ink-100 bg-ink-100/40 px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
+              Fleet units
+            </li>
+            {fleetVehicles.map(row)}
           </ul>
           <p className="border-t border-ink-100 px-3.5 py-2 text-[11px] text-ink-500">
             Fitment shown for {vehicleFull(vehicle)}

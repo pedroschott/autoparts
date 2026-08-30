@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800"><defs>
+<linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#D4DAE3"/><stop offset=".5" stop-color="#A8B2C0"/><stop offset="1" stop-color="#7A8494"/></linearGradient>
+<linearGradient id="steelv" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#7A8494"/><stop offset=".35" stop-color="#D4DAE3"/><stop offset="1" stop-color="#A8B2C0"/></linearGradient>
+<linearGradient id="dark" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#2A313C"/><stop offset=".35" stop-color="#5A6472"/><stop offset="1" stop-color="#39414E"/></linearGradient>
+<linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#123184"/><stop offset=".35" stop-color="#3763DD"/><stop offset="1" stop-color="#1C46C7"/></linearGradient>
+<linearGradient id="orange" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#B85A1E"/><stop offset=".35" stop-color="#F09454"/><stop offset="1" stop-color="#E07B39"/></linearGradient>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#D9C79C"/><stop offset=".4" stop-color="#F5EBD3"/><stop offset="1" stop-color="#E3D3AC"/></linearGradient>
+<radialGradient id="shadow"><stop offset="0" stop-color="#0B1220" stop-opacity=".22"/><stop offset="1" stop-color="#0B1220" stop-opacity="0"/></radialGradient>
+</defs><rect width="800" height="800" fill="#FFFFFF"/><ellipse cx="400" cy="690" rx="250" ry="34" fill="url(#shadow)"/><path d="M160 240 h480 a40 40 0 0 1 40 40 v300 h-96 a184 184 0 0 0 -368 0 h-96 v-300 a40 40 0 0 1 40 -40 z" fill="url(#steel)"/><path d="M160 240 h480 a40 40 0 0 1 40 40 v300 h-96 a184 184 0 0 0 -368 0 h-96 v-300 a40 40 0 0 1 40 -40 z" fill="none" stroke="#7A8494" stroke-width="6"/><path d="M584 580 a184 184 0 0 0 -368 0" fill="none" stroke="#8E97A6" stroke-width="16"/><path d="M136 366 h544" fill="none" stroke="#C9D0DA" stroke-width="12" opacity=".8"/><path d="M136 396 h544" fill="none" stroke="#8E97A6" stroke-width="6" opacity=".5"/><rect x="512" y="286" width="132" height="58" rx="14" fill="url(#orange)" opacity=".85"/><circle cx="200" cy="300" r="16" fill="#8E97A6"/><circle cx="200" cy="540" r="16" fill="#8E97A6"/></svg>

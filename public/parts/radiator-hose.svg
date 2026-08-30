@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800"><defs>
+<linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#D4DAE3"/><stop offset=".5" stop-color="#A8B2C0"/><stop offset="1" stop-color="#7A8494"/></linearGradient>
+<linearGradient id="steelv" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#7A8494"/><stop offset=".35" stop-color="#D4DAE3"/><stop offset="1" stop-color="#A8B2C0"/></linearGradient>
+<linearGradient id="dark" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#2A313C"/><stop offset=".35" stop-color="#5A6472"/><stop offset="1" stop-color="#39414E"/></linearGradient>
+<linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#123184"/><stop offset=".35" stop-color="#3763DD"/><stop offset="1" stop-color="#1C46C7"/></linearGradient>
+<linearGradient id="orange" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#B85A1E"/><stop offset=".35" stop-color="#F09454"/><stop offset="1" stop-color="#E07B39"/></linearGradient>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#D9C79C"/><stop offset=".4" stop-color="#F5EBD3"/><stop offset="1" stop-color="#E3D3AC"/></linearGradient>
+<radialGradient id="shadow"><stop offset="0" stop-color="#0B1220" stop-opacity=".22"/><stop offset="1" stop-color="#0B1220" stop-opacity="0"/></radialGradient>
+</defs><rect width="800" height="800" fill="#FFFFFF"/><ellipse cx="400" cy="690" rx="250" ry="34" fill="url(#shadow)"/><path d="M150 296 h190 a144 144 0 0 1 144 144 v190" fill="none" stroke="#22272F" stroke-width="88" stroke-linecap="round"/><path d="M150 296 h190 a144 144 0 0 1 144 144 v190" fill="none" stroke="#454E5C" stroke-width="26" stroke-linecap="round" opacity=".35"/><rect x="230" y="252" width="18" height="88" rx="9" fill="#1B2027" opacity=".55"/><rect x="266" y="252" width="18" height="88" rx="9" fill="#1B2027" opacity=".55"/><rect x="440" y="500" width="88" height="18" rx="9" fill="#1B2027" opacity=".55"/><rect x="440" y="536" width="88" height="18" rx="9" fill="#1B2027" opacity=".55"/><rect x="176" y="242" width="42" height="108" rx="10" fill="url(#steel)"/><circle cx="197" cy="232" r="16" fill="#7A8494"/><rect x="430" y="588" width="108" height="42" rx="10" fill="url(#steel)"/><circle cx="548" cy="609" r="16" fill="#7A8494"/></svg>
