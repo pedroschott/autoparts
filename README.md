@@ -45,12 +45,12 @@ integration, all built on `@agentpay/merchant-sdk` 0.2.0:
 | Route | Purpose |
 | --- | --- |
 | `GET /.well-known/agentpay.json` | Discovery: tells an agent this store takes AgentPay, where its catalog is, which mandate categories and currency it uses, and where to send a signed purchase |
-| `GET /api/agentpay/catalog` | The store-owned catalog an agent queries through AgentPay's `find_products`. Filters by `q`, `category`, `product_id`, `max_price_cents` and `limit`; returns exact product ids, the coarse mandate category and the BRL quote in cents |
+| `GET /api/agentpay/catalog` | The store-owned catalog an agent queries through AgentPay's `find_products`. Filters by `q`, `category`, `product_id`, `max_price_cents` and `limit`; returns exact product ids, the coarse mandate category and the USD quote in cents |
 | `POST /api/agentpay/checkout` | The guarded checkout. The SDK verifies the agent's Ed25519 signature, request freshness, the single-use nonce, the registry's signature over the mandate, the mandate's live status, and the policy limits |
 | `GET /api/products` | Human-oriented catalog feed with both the USD storefront price and the AgentPay quote |
 
 Every product page also carries the same values in `<meta name="agentpay:*">`
-tags and JSON-LD (`productID`, an AgentPay `Offer` in BRL, and
+tags and JSON-LD (`productID`, an AgentPay `Offer` in USD cents including any core deposit, and
 `additionalProperty` entries), so an agent that lands on `/product/bp-001`
 without calling the catalog still reads the exact id, category and quote
 instead of guessing them from the URL or the name.
@@ -71,12 +71,13 @@ SDK makes is cryptographic or public.
 | --- | --- |
 | `AGENTPAY_MERCHANT_ID` | The immutable `mrc_…` id from the merchant console |
 | `AGENTPAY_REGISTRY_URL` | The AgentPay deployment to verify against |
-| `AGENTPAY_CURRENCY` | Currency quoted to agents. The policy engine matches the mandate's currency exactly and converts nothing, so this must be the currency buyers hold mandates in — `BRL` |
-| `AGENTPAY_FX_RATE_FROM_USD` | Published rate the storefront's USD prices are converted at for agent quotes |
-| `AGENTPAY_PUBLIC_ORIGIN` | Optional. Forces the origin the manifest advertises, for proxies that rewrite neither `x-forwarded-host` nor `x-forwarded-proto` |
+| `AGENTPAY_PUBLIC_ORIGIN` | Optional. Forces the origin the manifest and catalog advertise, for proxies that rewrite neither `x-forwarded-host` nor `x-forwarded-proto` |
 
-The storefront stays a USD store; only the AgentPay quote is converted. Both
-numbers are in the catalog feed as `priceCents` and `agentpayPriceCents`.
+Agents are quoted in USD cents, the only currency AgentPay mandates are
+denominated in; the policy engine converts nothing and refuses any other
+currency with `CURRENCY_MISMATCH`. The quote is the part plus any core deposit,
+so it can differ from the storefront's sticker price: both are in the feed as
+`priceCents` and `agentpayPriceCents`.
 
 ### Testing it
 

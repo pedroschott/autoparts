@@ -5,11 +5,11 @@ import {
   generateEd25519KeyPair,
   signAgentPayRequest,
   signText,
+  type MerchantProduct,
   type RegistryMandate,
 } from "@agentpay/merchant-sdk";
 import {
   CURRENCY,
-  FX_RATE_FROM_USD,
   agentPayPriceCents,
   agentPayProduct,
   MERCHANT_ID,
@@ -85,13 +85,17 @@ function stubRegistry(current: RegistryMandate): typeof fetch {
   }) as typeof fetch;
 }
 
-function handlerFor(current: RegistryMandate, product = PRODUCT) {
+// `currency` is widened so a test can hand the handler a non-USD quote and
+// watch the policy engine refuse it; the SDK type only ever admits "USD".
+type TestProduct = Omit<MerchantProduct, "currency"> & { currency: string };
+
+function handlerFor(current: RegistryMandate, product: TestProduct = PRODUCT) {
   return createAgentPayCheckoutHandler({
     merchantId: MERCHANT_ID,
     registryUrl: "https://agentpay.example",
     fetcher: stubRegistry(current),
     now: () => NOW,
-    resolveProduct: async (id) => (id === product.id ? product : null),
+    resolveProduct: async (id) => (id === product.id ? (product as MerchantProduct) : null),
   });
 }
 
@@ -228,15 +232,16 @@ describe("agentpay checkout", () => {
     expect(response.status).toBe(400);
   });
 
-  it("quotes the mandate currency, converted from the storefront price", async () => {
-    const catalog = productById["bp-001"];
-    // What a person pays is USD; what the mandate is checked against is not the
-    // same integer unless the two currencies happen to match.
-    expect(PRODUCT.currency).toBe(CURRENCY);
-    expect(agentPayPriceCents(catalog)).toBe(
-      Math.round((catalog.price + (catalog.core ?? 0)) * FX_RATE_FROM_USD * 100)
-    );
-    expect(agentPayPriceCents(catalog)).not.toBe(Math.round(catalog.price * 100));
+  it("quotes USD cents including the core deposit, never a converted amount", async () => {
+    // AgentPay mandates are USD-only and nothing is converted: the quote is the
+    // sticker price plus any core charge, as one rounded integer.
+    expect(PRODUCT.currency).toBe("USD");
+    expect(CURRENCY).toBe("USD");
+    const plain = productById["bp-001"];
+    expect(agentPayPriceCents(plain)).toBe(Math.round(plain.price * 100));
+    const withCore = productById["bp-020"];
+    expect(withCore.core).toBeGreaterThan(0);
+    expect(agentPayPriceCents(withCore)).toBe(Math.round((withCore.price + (withCore.core ?? 0)) * 100));
   });
 
   it("rejects a stale timestamp", async () => {

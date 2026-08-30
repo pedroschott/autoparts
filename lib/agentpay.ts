@@ -16,25 +16,15 @@ export const PRODUCT_URL_TEMPLATE = "/product/{id}";
 export const REGISTRY_URL =
   process.env.AGENTPAY_REGISTRY_URL ?? "https://agentpay-yuno.vercel.app";
 
-/** What the storefront shows a person. Every price in lib/products.ts is USD. */
-export const STORE_CURRENCY = "USD";
-
 /**
- * What PartsRoute quotes an agent. The policy engine compares this against the
- * mandate's own currency exactly and refuses a mismatch rather than converting,
- * so the quote has to be denominated in the currency buyers actually hold
- * mandates in — BRL today. Quoting USD here returns CURRENCY_MISMATCH on every
- * purchase, which looks like a broken integration rather than a refusal.
+ * The only currency AgentPay mandates are denominated in, and the currency
+ * every price in lib/products.ts is already in. The policy engine compares the
+ * quote against the mandate's currency exactly and refuses a mismatch rather
+ * than converting, so this is a constant, not configuration: the SDK types it
+ * as the literal "USD" and a store quoting anything else is refused with
+ * CURRENCY_MISMATCH on every purchase.
  */
-export const CURRENCY = process.env.AGENTPAY_CURRENCY ?? "BRL";
-
-/**
- * The rate the storefront's USD prices are converted at when the agent quote is
- * in another currency. It is a published rate, not a live one: the agent is
- * quoted a number that must still be honourable when the charge settles, and a
- * rate that moves between the quote and the charge is a price that moved.
- */
-export const FX_RATE_FROM_USD = Number(process.env.AGENTPAY_FX_RATE_FROM_USD ?? "5.40");
+export const CURRENCY = "USD" as const;
 
 /**
  * The storefront's display categories are merchandising labels ("Suspension &
@@ -65,18 +55,16 @@ export function agentPayCategory(product: Product) {
 }
 
 /**
- * What the agent is charged: the part plus any core deposit, in CURRENCY minor
- * units. The agent never sends an amount — this is the only number the mandate
- * is evaluated against, so a price is never negotiable.
+ * What the agent is charged: the part plus any core deposit, in USD cents. The
+ * agent never sends an amount — this is the only number the mandate is
+ * evaluated against, so a price is never negotiable.
  *
  * Rounding is a single step on the total rather than per component, so the
- * amount quoted in the catalog feed is the same integer the policy engine
- * checks against the limit.
+ * amount in the catalog, on the product page and at checkout is the same
+ * integer the policy engine checks against the limit.
  */
 export function agentPayPriceCents(product: Product) {
-  const usd = product.price + (product.core ?? 0);
-  const quoted = CURRENCY === STORE_CURRENCY ? usd : usd * FX_RATE_FROM_USD;
-  return Math.round(quoted * 100);
+  return Math.round((product.price + (product.core ?? 0)) * 100);
 }
 
 export function agentPayProduct(product: Product): MerchantProduct {

@@ -12,13 +12,13 @@ import {
 // Machine-readable catalog feed. Prices are in minor units so that downstream
 // consumers never have to deal with float rounding.
 //
-// Two prices, deliberately. `priceCents` is the USD a person pays on the
-// storefront. `agentpayPriceCents` is the same part quoted in the currency
-// mandates are denominated in, which is what the policy engine checks the
-// mandate limits against — the two differ whenever AGENTPAY_CURRENCY is not the
-// store currency. Both, plus the coarse category a mandate has to be scoped to,
-// come from lib/agentpay.ts, so the feed can never advertise a price the
-// checkout route would not honour.
+// Two prices, deliberately. `priceCents` is the sticker price a person sees on
+// the storefront. `agentpayPriceCents` is what the policy engine checks the
+// mandate limits against: the same part plus any core deposit, in USD cents,
+// the only currency AgentPay mandates are denominated in. Both, plus the coarse
+// category a mandate has to be scoped to, come from lib/agentpay.ts, so the
+// feed can never advertise a price the checkout route would not honour.
+// Agents should prefer /api/agentpay/catalog, which is the shape they read.
 export function GET() {
   return NextResponse.json({
     currency: "USD",
