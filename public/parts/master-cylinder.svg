@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800"><defs>
+<linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#D4DAE3"/><stop offset=".5" stop-color="#A8B2C0"/><stop offset="1" stop-color="#7A8494"/></linearGradient>
+<linearGradient id="steelv" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#7A8494"/><stop offset=".35" stop-color="#D4DAE3"/><stop offset="1" stop-color="#A8B2C0"/></linearGradient>
+<linearGradient id="dark" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#2A313C"/><stop offset=".35" stop-color="#5A6472"/><stop offset="1" stop-color="#39414E"/></linearGradient>
+<linearGradient id="blue" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#123184"/><stop offset=".35" stop-color="#3763DD"/><stop offset="1" stop-color="#1C46C7"/></linearGradient>
+<linearGradient id="orange" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#B85A1E"/><stop offset=".35" stop-color="#F09454"/><stop offset="1" stop-color="#E07B39"/></linearGradient>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#D9C79C"/><stop offset=".4" stop-color="#F5EBD3"/><stop offset="1" stop-color="#E3D3AC"/></linearGradient>
+<radialGradient id="shadow"><stop offset="0" stop-color="#0B1220" stop-opacity=".22"/><stop offset="1" stop-color="#0B1220" stop-opacity="0"/></radialGradient>
+</defs><rect width="800" height="800" fill="#FFFFFF"/><ellipse cx="400" cy="690" rx="250" ry="34" fill="url(#shadow)"/><path d="M244 176 h288 a26 26 0 0 1 26 26 v134 h-340 v-134 a26 26 0 0 1 26 -26 z" fill="#E6EAF0" opacity=".95"/><path d="M244 176 h288 a26 26 0 0 1 26 26 v134 h-340 v-134 a26 26 0 0 1 26 -26 z" fill="none" stroke="#A8B2C0" stroke-width="6"/><rect x="222" y="256" width="336" height="80" fill="url(#paper)" opacity=".75"/><rect x="330" y="118" width="130" height="62" rx="16" fill="#22272F"/><rect x="352" y="132" width="86" height="18" rx="9" fill="#3A424E"/><rect x="196" y="336" width="352" height="184" rx="28" fill="url(#steel)"/><rect x="160" y="308" width="58" height="240" rx="14" fill="#7A8494"/><circle cx="189" cy="352" r="14" fill="#FFFFFF"/><circle cx="189" cy="504" r="14" fill="#FFFFFF"/><rect x="548" y="404" width="132" height="46" rx="14" fill="#C9D0DA"/><rect x="524" y="386" width="42" height="82" rx="10" fill="#8E97A6"/><rect x="268" y="516" width="66" height="56" rx="10" fill="#7A8494"/><rect x="418" y="516" width="66" height="56" rx="10" fill="#7A8494"/></svg>

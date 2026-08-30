@@ -22,7 +22,23 @@ export const vehicles: Vehicle[] = [
   { id: "ram1500-2020", year: 2020, make: "Ram", model: "1500", trim: "Big Horn", engine: "5.7L V8" },
   { id: "altima-2019", year: 2019, make: "Nissan", model: "Altima", trim: "SV", engine: "2.5L L4" },
   { id: "crv-2020", year: 2020, make: "Honda", model: "CR-V", trim: "EX-L", engine: "1.5L L4 Turbo" },
+
+  // The commercial fleet. These six carry a `unit` and a `role` because the
+  // buyer searching for their parts is a dispatcher with a truck off the road,
+  // not a retail customer: they know the unit number before they know the year.
+  { id: "transit250-2021", year: 2021, make: "Ford", model: "Transit 250", trim: "Cargo Medium Roof", engine: "3.5L V6", unit: "VAN-17", role: "Last-mile delivery" },
+  { id: "sprinter2500-2020", year: 2020, make: "Mercedes-Benz", model: "Sprinter 2500", trim: "Cargo 144", engine: "2.0L L4 Turbodiesel", unit: "VAN-22", role: "Delivery" },
+  { id: "f150fleet-2022", year: 2022, make: "Ford", model: "F-150", trim: "XL Fleet", engine: "3.3L V6", unit: "TRUCK-08", role: "Field service" },
+  { id: "silverado2500-2021", year: 2021, make: "Chevrolet", model: "Silverado 2500HD", trim: "Work Truck", engine: "6.6L V8", unit: "TRUCK-12", role: "Maintenance crew" },
+  { id: "e450-2019", year: 2019, make: "Ford", model: "E-450", trim: "Box Truck Cutaway", engine: "6.8L V10", unit: "BOX-03", role: "Distribution" },
+  { id: "npr-2020", year: 2020, make: "Isuzu", model: "NPR", trim: "Gas Standard Cab", engine: "6.0L V8", unit: "BOX-07", role: "Urban freight" },
 ];
+
+// A unit number is what makes a vehicle a fleet vehicle, so it is the only
+// thing either list is derived from — adding a unit above puts it in the
+// fleet group everywhere without touching a component.
+export const fleetVehicles = vehicles.filter((v) => v.unit);
+export const retailVehicles = vehicles.filter((v) => !v.unit);
 
 export const vehicleLabel = (v: Vehicle) => `${v.year} ${v.make} ${v.model}`;
 export const vehicleFull = (v: Vehicle) => `${v.year} ${v.make} ${v.model} ${v.trim} ${v.engine}`;
