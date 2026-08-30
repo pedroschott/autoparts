@@ -15,7 +15,7 @@ import {
   MERCHANT_ID,
 } from "@/lib/agentpay";
 import { productById } from "@/lib/products";
-import { quoteFulfillment } from "@/lib/shipping";
+import { quoteFulfillment, serviceLevelFor } from "@/lib/shipping";
 
 /**
  * The regression net from the AgentPay merchant docs, pinned to this store's
@@ -338,6 +338,28 @@ describe("agentpay checkout", () => {
       decision: "refused",
       reason_code: "SHIPPING_ADDRESS_UNSUPPORTED",
     });
+  });
+
+  it("routes fleet-sized parts as freight even inside the courier radius", async () => {
+    // The catalog puts a Civic tire and a box-truck tire in one category, so the
+    // size on the row decides. A 19.5 in disc wheel and a 7-leaf spring do not
+    // go out on the same courier run as a set of brake pads.
+    expect(serviceLevelFor(productById["wt-151"], LOCAL_ADDRESS)).toBe("freight");
+    expect(serviceLevelFor(productById["su-140"], LOCAL_ADDRESS)).toBe("freight");
+    expect(serviceLevelFor(productById["wt-011"], LOCAL_ADDRESS)).toBe("courier");
+    expect(serviceLevelFor(productById["bp-001"], LOCAL_ADDRESS)).toBe("courier");
+
+    const quote = quoteFulfillment({
+      product: productById["wt-151"],
+      address: LOCAL_ADDRESS,
+      addressSource: "registered",
+      subtotalCents: 42_900,
+      now: NOW,
+    });
+    expect(quote?.method).toBe("Freight, curbside delivery");
+    // Freight is never free on the $150 ground threshold.
+    expect(quote?.shipping_cents).toBeGreaterThan(0);
+    expect(quote?.notes).toContain("Curbside only. Someone must be present to receive the pallet.");
   });
 
   it("escalates when delivery is what pushes the order over the per-purchase limit", async () => {

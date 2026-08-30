@@ -99,12 +99,16 @@ than from a flat rate that would be wrong in both directions.
 | --- | --- | --- |
 | Same-day courier | NY/NJ metro ZIPs (100–104, 110–114, 070–073) | $19.95 |
 | Ground | Anywhere else in the US | $12.95, free over $150 |
-| Freight, curbside | Radiators, exhausts, tanks, transmissions — anything on a pallet | $24.95 |
+| Freight, curbside | Radiators, exhausts, leaf springs, and medium-duty wheels and tires | $24.95 |
 
 Anything outside the US returns `null`, which the SDK turns into
 `SHIPPING_ADDRESS_UNSUPPORTED` **before** one of the buyer's approved mandate
 uses is consumed — a use spent on an order that could never arrive is a use they
 paid for and did not get.
+
+`Tire` and `Wheel` span a Civic and a box truck in one category, so the size on
+the row decides rather than the category it sits in: a 19.5 in steel disc wheel
+goes freight, a 215/55R17 does not.
 
 Delivery estimates skip weekends: two business days from a Friday is Tuesday,
 and an agent that repeats a Sunday date to a buyer has told them something
@@ -161,10 +165,11 @@ no network and no buyer. It exists to catch the two mistakes that silently
 disable AgentPay — a body parser that breaks signatures, and a refactor that
 charges before reading the decision.
 
-Five of those cases cover delivery: a Brooklyn address quoted as courier, a
+Six of those cases cover delivery: a Brooklyn address quoted as courier, a
 Denver one falling back to ground, an address abroad refused before a use is
-spent, a checkout with no address at all, and an order that only escalates
-because the courier fee pushed it over the buyer's per-purchase limit.
+spent, a checkout with no address at all, a fleet-sized part routed to freight
+inside the courier radius, and an order that only escalates because the courier
+fee pushed it over the buyer's per-purchase limit.
 
 `tests/catalog-data.test.ts` covers the hand-written table itself: unique ids and
 part numbers, a real supplier, artwork file and vehicle behind every row, a price

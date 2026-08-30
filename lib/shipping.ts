@@ -31,14 +31,31 @@ const GROUND_CENTS = 1_295;
 const EXPEDITED_GROUND_CENTS = 2_495;
 const COURIER_CENTS = 1_995;
 
-/** Heavy parts move on a pallet and never on the bike courier. */
+/** Part types that are always pallet freight, whatever they are fitted to. */
 const OVERSIZED_SUBCATEGORIES = new Set([
   "Radiator",
   "Catalytic Converter",
   "Muffler",
+  "Leaf Spring",
   "Fuel Tank",
   "Transmission",
 ]);
+
+/**
+ * Medium-duty wheel and tire sizes. `Tire` and `Wheel` span a Civic and a box
+ * truck in one category — the catalog says so outright — so the size on the row
+ * decides, not the category it sits in. A 19.5 in steel disc wheel does not go
+ * out on the same courier run as a 215/55R17.
+ */
+const MEDIUM_DUTY_SIZE = /(?:^|[^\d.])19\.5(?:\D|$)/;
+
+function isOversized(product: Product): boolean {
+  if (OVERSIZED_SUBCATEGORIES.has(product.subCategory)) return true;
+  return (
+    (product.subCategory === "Tire" || product.subCategory === "Wheel") &&
+    MEDIUM_DUTY_SIZE.test(product.name)
+  );
+}
 
 export type ServiceLevel = "courier" | "ground" | "freight";
 
@@ -54,9 +71,8 @@ export function isServiceable(address: ShippingAddress): boolean {
 }
 
 export function serviceLevelFor(product: Product, address: ShippingAddress): ServiceLevel {
+  if (isOversized(product)) return "freight";
   const zip = normalizedZip(address.postal_code);
-  const oversized = OVERSIZED_SUBCATEGORIES.has(product.subCategory);
-  if (oversized) return "freight";
   return COURIER_ZIP_PREFIXES.some((prefix) => zip.startsWith(prefix)) ? "courier" : "ground";
 }
 
